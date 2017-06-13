@@ -10,20 +10,20 @@ add_library(swresample SHARED IMPORTED)
 add_library(swscale SHARED IMPORTED)
 
 set_target_properties(avcodec PROPERTIES IMPORTED_LOCATION
-    ${distribution_DIR}/libs/${ANDROID_ABI}/lib/libavcodec.so)
+    ${distribution_DIR}/ffmpeg/lib/${ANDROID_ABI}/libavcodec.so)
 set_target_properties(avfilter PROPERTIES IMPORTED_LOCATION
-    ${distribution_DIR}/libs/${ANDROID_ABI}/lib/libavfilter.so)
+    ${distribution_DIR}/ffmpeg/lib/${ANDROID_ABI}/libavfilter.so)
 set_target_properties(avformat PROPERTIES IMPORTED_LOCATION
-    ${distribution_DIR}/libs/${ANDROID_ABI}/lib/libavformat.so)
+    ${distribution_DIR}/ffmpeg/lib/${ANDROID_ABI}/libavformat.so)
 set_target_properties(avutil PROPERTIES IMPORTED_LOCATION
-    ${distribution_DIR}/libs/${ANDROID_ABI}/lib/libavutil.so)
+    ${distribution_DIR}/ffmpeg/lib/${ANDROID_ABI}/libavutil.so)
 set_target_properties(swresample PROPERTIES IMPORTED_LOCATION
-    ${distribution_DIR}/libs/${ANDROID_ABI}/lib/libswresample.so)
+    ${distribution_DIR}/ffmpeg/lib/${ANDROID_ABI}/libswresample.so)
 set_target_properties(swscale PROPERTIES IMPORTED_LOCATION
-    ${distribution_DIR}/libs/${ANDROID_ABI}/lib/libswscale.so)
+    ${distribution_DIR}/ffmpeg/lib/${ANDROID_ABI}/libswscale.so)
 
 
-set(SOURCE_FILES make_gif.c make_gif.h)
+set(SOURCE_FILES make_gif.c make_gif.h ffmpeg.c)
 add_library(ffmpeg_wrap SHARED ${SOURCE_FILES})
 target_link_libraries(ffmpeg_wrap avcodec avfilter avformat avutil)
 
@@ -32,9 +32,9 @@ add_executable(ffmpeg_test ${SOURCE_FILES_TESTS})
 target_link_libraries(ffmpeg_test avcodec avfilter avformat avutil)
 
 target_include_directories(ffmpeg_wrap PRIVATE
-                           ${distribution_DIR}/libs/${ANDROID_ABI}/include/
+                           ${distribution_DIR}/ffmpeg/include/
                            )
 
 target_include_directories(ffmpeg_test PRIVATE
-                           ${distribution_DIR}/libs/${ANDROID_ABI}/include/
+                           ${distribution_DIR}/ffmpeg/include/
                            )

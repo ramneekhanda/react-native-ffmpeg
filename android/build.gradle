@@ -20,18 +20,14 @@ android {
         targetSdkVersion 22
         versionCode 1
         versionName "1.0"
-        ndk {
-            abiFilters 'x86'
-        }
-    }
-    defaultConfig {
         externalNativeBuild {
             cmake {
                 targets "ffmpeg_wrap", "ffmpeg_test"
-                abiFilters 'x86'
+                abiFilters 'x86', 'armeabi'
             }
         }
     }
+
     lintOptions {
         abortOnError false
     }
