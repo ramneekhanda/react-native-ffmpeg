@@ -1,47 +1,40 @@
-cmake_minimum_required(VERSION 3.4.1)
+cmake_minimum_required(VERSION 3.6.0)
 
 set(distribution_DIR ${CMAKE_SOURCE_DIR}/../../../distribution)
 
+add_library(avcodec SHARED IMPORTED)
+add_library(avfilter SHARED IMPORTED)
+add_library(avformat SHARED IMPORTED)
+add_library(avutil SHARED IMPORTED)
+add_library(swresample SHARED IMPORTED)
+add_library(swscale SHARED IMPORTED)
 
-add_library(libavcodec STATIC IMPORTED)
-add_library(libavdevice STATIC IMPORTED)
-add_library(libavfilter STATIC IMPORTED)
-add_library(libavformat STATIC IMPORTED)
-add_library(libavutil STATIC IMPORTED)
-add_library(libswresample STATIC IMPORTED)
-add_library(libswscale STATIC IMPORTED)
-
-set_target_properties(libavcodec PROPERTIES IMPORTED_LOCATION
-    ${distribution_DIR}/lib/${ANDROID_ABI}/libavcodec.a)
-set_target_properties(libavdevice PROPERTIES IMPORTED_LOCATION
-    ${distribution_DIR}/lib/${ANDROID_ABI}/libavdevice.a)
-set_target_properties(libavfilter PROPERTIES IMPORTED_LOCATION
-    ${distribution_DIR}/lib/${ANDROID_ABI}/libavfilter.a)
-set_target_properties(libavformat PROPERTIES IMPORTED_LOCATION
-    ${distribution_DIR}/lib/${ANDROID_ABI}/libavformat.a)
-set_target_properties(libavutil PROPERTIES IMPORTED_LOCATION
-    ${distribution_DIR}/lib/${ANDROID_ABI}/libavutil.a)
-set_target_properties(libswresample PROPERTIES IMPORTED_LOCATION
-    ${distribution_DIR}/lib/${ANDROID_ABI}/libswresample.a)
-set_target_properties(libswscale PROPERTIES IMPORTED_LOCATION
-    ${distribution_DIR}/lib/${ANDROID_ABI}/libswscale.a)
+set_target_properties(avcodec PROPERTIES IMPORTED_LOCATION
+    ${distribution_DIR}/libs/${ANDROID_ABI}/lib/libavcodec.so)
+set_target_properties(avfilter PROPERTIES IMPORTED_LOCATION
+    ${distribution_DIR}/libs/${ANDROID_ABI}/lib/libavfilter.so)
+set_target_properties(avformat PROPERTIES IMPORTED_LOCATION
+    ${distribution_DIR}/libs/${ANDROID_ABI}/lib/libavformat.so)
+set_target_properties(avutil PROPERTIES IMPORTED_LOCATION
+    ${distribution_DIR}/libs/${ANDROID_ABI}/lib/libavutil.so)
+set_target_properties(swresample PROPERTIES IMPORTED_LOCATION
+    ${distribution_DIR}/libs/${ANDROID_ABI}/lib/libswresample.so)
+set_target_properties(swscale PROPERTIES IMPORTED_LOCATION
+    ${distribution_DIR}/libs/${ANDROID_ABI}/lib/libswscale.so)
 
 
-add_library(ffmpegjni SHARED
-            FFMpegJNI.cpp)
+set(SOURCE_FILES make_gif.c make_gif.h)
+add_library(ffmpeg_wrap SHARED ${SOURCE_FILES})
+target_link_libraries(ffmpeg_wrap avcodec avfilter avformat avutil)
 
-target_include_directories(ffmpegjni PRIVATE
-                           ${distribution_DIR}/include
+set(SOURCE_FILES_TESTS test/main.c make_gif.c make_gif.h)
+add_executable(ffmpeg_test ${SOURCE_FILES_TESTS})
+target_link_libraries(ffmpeg_test avcodec avfilter avformat avutil)
+
+target_include_directories(ffmpeg_wrap PRIVATE
+                           ${distribution_DIR}/libs/${ANDROID_ABI}/include/
                            )
 
-# Include libraries needed for hello-jni lib
-target_link_libraries(ffmpegjni
-                      android
-                      libavcodec
-                      libavdevice
-                      libavfilter
-                      libavformat
-                      libavutil
-                      libswresample
-                      libswscale
-                      log)
+target_include_directories(ffmpeg_test PRIVATE
+                           ${distribution_DIR}/libs/${ANDROID_ABI}/include/
+                           )

@@ -1,0 +1,14 @@
+prefix=/home/ramneek/workspace/rn-ffmpeg/android/src/3rdParty/ffmpeg/install/armeabi
+exec_prefix=${prefix}
+libdir=/home/ramneek/workspace/rn-ffmpeg/android/src/3rdParty/ffmpeg/install/armeabi/lib
+includedir=/home/ramneek/workspace/rn-ffmpeg/android/src/3rdParty/ffmpeg/install/armeabi/include
+
+Name: libavutil
+Description: FFmpeg utility library
+Version: 55.63.100
+Requires: 
+Requires.private: 
+Conflicts:
+Libs: -L${libdir}  -lavutil 
+Libs.private: -lm
+Cflags: -I${includedir}

@@ -1,0 +1,14 @@
+prefix=/home/ramneek/workspace/rn-ffmpeg/android/src/3rdParty/ffmpeg/install/armeabi
+exec_prefix=${prefix}
+libdir=/home/ramneek/workspace/rn-ffmpeg/android/src/3rdParty/ffmpeg/install/armeabi/lib
+includedir=/home/ramneek/workspace/rn-ffmpeg/android/src/3rdParty/ffmpeg/install/armeabi/include
+
+Name: libavfilter
+Description: FFmpeg audio/video filtering library
+Version: 6.92.100
+Requires: 
+Requires.private: libswscale >= 4.7.101, libavformat >= 57.73.100, libavcodec >= 57.98.100, libswresample >= 2.8.100, libavutil >= 55.63.100
+Conflicts:
+Libs: -L${libdir}  -lavfilter 
+Libs.private: -lm -lz -pthread -pthread
+Cflags: -I${includedir}

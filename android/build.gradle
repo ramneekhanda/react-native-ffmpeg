@@ -21,7 +21,15 @@ android {
         versionCode 1
         versionName "1.0"
         ndk {
-            abiFilters 'x86', 'armeabi'
+            abiFilters 'x86'
+        }
+    }
+    defaultConfig {
+        externalNativeBuild {
+            cmake {
+                targets "ffmpeg_wrap", "ffmpeg_test"
+                abiFilters 'x86'
+            }
         }
     }
     lintOptions {
@@ -32,6 +40,7 @@ android {
             path "src/main/jni/CMakeLists.txt"
         }
     }
+    sourceSets { main { jni.srcDirs = ['src/main/jni'] } }
 }
 
 repositories {

@@ -1,0 +1,14 @@
+prefix=/home/ramneek/workspace/rn-ffmpeg/android/src/3rdParty/ffmpeg/install/armeabi-v7a
+exec_prefix=${prefix}
+libdir=/home/ramneek/workspace/rn-ffmpeg/android/src/3rdParty/ffmpeg/install/armeabi-v7a/lib
+includedir=/home/ramneek/workspace/rn-ffmpeg/android/src/3rdParty/ffmpeg/install/armeabi-v7a/include
+
+Name: libswresample
+Description: FFmpeg audio resampling library
+Version: 2.8.100
+Requires: 
+Requires.private: libavutil >= 55.63.100
+Conflicts:
+Libs: -L${libdir}  -lswresample 
+Libs.private: -lm
+Cflags: -I${includedir}
