@@ -1,3 +1,4 @@
+apply plugin: 'com.android.library'
 
 buildscript {
     repositories {
@@ -8,8 +9,6 @@ buildscript {
         classpath 'com.android.tools.build:gradle:2.3.2'
     }
 }
-
-apply plugin: 'com.android.library'
 
 android {
     compileSdkVersion 25
@@ -23,7 +22,7 @@ android {
         externalNativeBuild {
             cmake {
                 targets "ffmpeg_wrap", "ffmpeg_test"
-                abiFilters 'x86', 'armeabi'
+                abiFilters 'x86', 'armeabi', 'armeabi-v7a'
             }
         }
     }
@@ -36,7 +35,12 @@ android {
             path "src/main/jni/CMakeLists.txt"
         }
     }
-    sourceSets { main { jni.srcDirs = ['src/main/jni'] } }
+    sourceSets {
+        main {
+            jni.srcDirs = ['src/main/jni']
+            jniLibs.srcDirs = ['distribution/ffmpeg/lib']
+        }
+    }
 }
 
 repositories {
