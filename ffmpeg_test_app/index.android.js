@@ -15,7 +15,7 @@ import {
   Image
 } from 'react-native';
 
-import RNFFMpeg from 'rn-ffmpeg';
+import ReactNativeFFMpeg from 'rn-ffmpeg';
 import resolveAssetSource from 'react-native/Libraries/Image/resolveAssetSource';
 import RNFS from 'react-native-fs';
 
@@ -52,7 +52,9 @@ export default class ffmpeg_test_app extends Component {
     console.log("resolved file " + resolvedFile);
     console.log("writing output file " + randomFileName);
     var remoteFileName = this.getRemoteFileName(resolvedFile);
-
+    const progress = p => { 
+      console.log("javascript completed percent - " + p.progress); 
+    }
     if (resolvedFile.search(/http:\/\//i) >= 0) {
       var localInputFileName = RNFS.CachesDirectoryPath + "/" + remoteFileName;
       console.log("remote file is being used - probably running under debugger. Will download the file now");
@@ -65,13 +67,13 @@ export default class ffmpeg_test_app extends Component {
         this.setState({
           imageAvailable: false
         });
-        RNFFMpeg.encodeVideo(
+        ReactNativeFFMpeg.encodeVideoOnly(
           {
             fromFile: localInputFileName,
             toFile: randomFileName,
-            (p) => console.log("javascript completed percent - " + p)
+            progress
           }
-        ).then(() => {
+        ).promise.then(() => {
           console.log("completed conversion");
           this.setState({
             imageAvailable: true

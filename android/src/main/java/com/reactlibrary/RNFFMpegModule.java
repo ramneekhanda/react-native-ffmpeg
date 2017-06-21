@@ -2,6 +2,8 @@
 package com.reactlibrary;
 
 import android.support.annotation.Nullable;
+
+import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
@@ -28,17 +30,22 @@ public class RNFFMpegModule extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
-  public void encodeVideo(final ReadableMap options, final Promise promise) {
-    FFMpeg ffmpeg = new FFMpeg(new FFMpegCallback(promise, reactContext));
-    ffmpeg.encodeVideoOnly(filename, outputFilename);
+  public void encodeVideoOnly(final ReadableMap options, final Promise promise) {
+    int jobId = options.getInt("jobId");
+    String fromFile = options.getString("fromFile");
+    String toFile = options.getString("toFile");
+    FFMpeg ffmpeg = new FFMpeg(new FFMpegCallback(jobId, promise, reactContext));
+    ffmpeg.encodeVideoOnly(fromFile, toFile);
   }
 }
 
 class FFMpegCallback implements IFFMpegCallback {
   private final ReactApplicationContext reactContext;
   private Promise promise = null;
+  private int jobId;
 
-  FFMpegCallback(Promise promise, ReactApplicationContext reactContext) {
+  FFMpegCallback(int jobId, Promise promise, ReactApplicationContext reactContext) {
+    this.jobId = jobId;
     this.reactContext = reactContext;
     this.promise = promise;
   }
@@ -46,12 +53,15 @@ class FFMpegCallback implements IFFMpegCallback {
   private void sendEvent(ReactContext reactContext, String eventName, @Nullable WritableMap params) {
     reactContext
             .getJSModule(RCTNativeAppEventEmitter.class)
-            .emit(eventName, params);
+            .emit("RNFFMPEG-PROGRESS-" + jobId, params);
   }
 
   public void progress(int percentageDone) {
     System.out.println("progressCallback not defined - percentage completed - " + percentageDone);
-    sendEvent(reactContext, "Progress", null);
+    WritableMap params = Arguments.createMap();
+    params.putInt("jobId", this.jobId);
+    params.putInt("progress", percentageDone);
+    sendEvent(reactContext, "Progress", params);
   }
 
   public void done() {
