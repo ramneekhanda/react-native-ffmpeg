@@ -55,7 +55,7 @@ export default class ffmpeg_test_app extends Component {
     const progress = p => { 
       console.log("javascript completed percent - " + p.progress); 
     }
-    if (resolvedFile.search(/http:\/\//i) >= 0) {
+    if (resolvedFile.search(/http/i) >= 0) {
       var localInputFileName = RNFS.CachesDirectoryPath + "/" + remoteFileName;
       console.log("remote file is being used - probably running under debugger. Will download the file now");
       console.log("Downloading to file " + localInputFileName);
