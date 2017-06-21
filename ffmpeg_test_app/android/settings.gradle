@@ -1,0 +1,9 @@
+rootProject.name = 'ffmpeg_test_app'
+include ':react-native-fs'
+project(':react-native-fs').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-fs/android')
+include ':rn-ffmpeg'
+project(':rn-ffmpeg').projectDir = new File(rootProject.projectDir, '../node_modules/rn-ffmpeg/android')
+
+include ':RNFFMpegModule', ':app'
+project(':RNFFMpegModule').projectDir = new File(rootProject.projectDir, '../node_modules/rn-ffmpeg/android')
+

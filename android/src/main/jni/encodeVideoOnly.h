@@ -5,7 +5,6 @@
  */
 
 /* 
- * File:   make_gif.h
  * Author: ramneek
  *
  * Created on 13 June, 2017, 2:52 AM
@@ -14,16 +13,11 @@
 #ifndef MAKE_GIF_H
 #define MAKE_GIF_H
 
-#ifdef __cplusplus
-extern "C" {
+typedef void (*progress)(void *, int);
+typedef void (*done)(void *);
+typedef void (*error)(void *, char *);
+
+int encodeVideoOnly(const char *infile, const char *outfile, void * vp, progress p, done d, error e);
+
 #endif
-
-int make_gif(const char *infile, const char *outfile);
-
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* MAKE_GIF_H */
 

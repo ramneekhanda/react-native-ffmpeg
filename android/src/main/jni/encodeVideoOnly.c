@@ -12,6 +12,8 @@
 #include <libavutil/opt.h>
 #include <libavutil/pixdesc.h>
 
+#include "encodeVideoOnly.h"
+
 static AVFormatContext *ifmt_ctx;
 static AVFormatContext *ofmt_ctx;
 static unsigned int video_idx = -1;
@@ -388,7 +390,7 @@ static int flush_encoder(unsigned int stream_index) {
     return ret;
 }
 
-int make_gif(const char *infile, const char *outfile) {
+int encodeVideoOnly(const char *infile, const char *outfile, void *vp, progress prgs, done dn, error er) {
     int ret;
     AVPacket packet = {.data = NULL, .size = 0};
     AVFrame *frame = NULL;
@@ -449,6 +451,7 @@ int make_gif(const char *infile, const char *outfile) {
                     goto end;
                 int p = (float) nb_frames_written / nb_frames * 100;
                 av_log(NULL, AV_LOG_ERROR, "nb_frames: %u, nb_frames_written: %u, percentage: %d\n", nb_frames, nb_frames_written, p);
+                prgs(vp, p);
             } else {
                 av_frame_free(&frame);
             }
@@ -503,5 +506,5 @@ end:
     if (ret < 0)
         av_log(NULL, AV_LOG_ERROR, "Error occurred: %s\n", av_err2str(ret));
 
-    return ret ? 1 : 0;
+    ret ? dn(vp) : er(vp, av_err2str(ret));
 }

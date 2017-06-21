@@ -23,11 +23,11 @@ set_target_properties(swscale PROPERTIES IMPORTED_LOCATION
     ${distribution_DIR}/ffmpeg/lib/${ANDROID_ABI}/libswscale.so)
 
 
-set(SOURCE_FILES make_gif.c make_gif.h ffmpeg.c)
+set(SOURCE_FILES encodeVideoOnly.c encodeVideoOnly.h ffmpeg.c)
 add_library(ffmpeg_wrap SHARED ${SOURCE_FILES})
 target_link_libraries(ffmpeg_wrap avcodec avfilter avformat avutil)
 
-set(SOURCE_FILES_TESTS test/main.c make_gif.c make_gif.h)
+set(SOURCE_FILES_TESTS test/main.c encodeVideoOnly.c encodeVideoOnly.h)
 add_executable(ffmpeg_test ${SOURCE_FILES_TESTS})
 target_link_libraries(ffmpeg_test avcodec avfilter avformat avutil)
 
