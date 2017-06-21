@@ -62,11 +62,22 @@ export default class ffmpeg_test_app extends Component {
         toFile: localInputFileName
       }).promise.then(res => {
         console.log("Downloaded file file://" + localInputFileName);
-        RNFFMpeg.encodeVideo("file://" + localInputFileName, randomFileName, (p) => {console.log("completed " + p + "%")})
-          .then(() => {console.log("completed conversion")})
-          .catch((err) => {console.log("Error occurred: " + err)});
-        console.log("I think i am done!");
-        
+        this.setState({
+          imageAvailable: false
+        });
+        RNFFMpeg.encodeVideo(
+          {
+            fromFile: localInputFileName,
+            toFile: randomFileName,
+            (p) => console.log("javascript completed percent - " + p)
+          }
+        ).then(() => {
+          console.log("completed conversion");
+          this.setState({
+            imageAvailable: true
+          });
+        })
+          .catch((err) => { console.log("Error occurred: " + err) });
       }).catch(err => {
         console.log("Failed to download file")
       })
@@ -74,9 +85,7 @@ export default class ffmpeg_test_app extends Component {
   }
 
   onShow() {
-    this.setState({
-      imageAvailable: true
-    }); 
+
   }
 
   render() {
@@ -84,15 +93,14 @@ export default class ffmpeg_test_app extends Component {
     if (this.state.imageAvailable) {
       console.log("showing image " + this.state.fileName)
       ImageComponent = <Image
-          style={{width: 300, height: 300}}
-          source={{uri: "file://" + this.state.fileName}}
-          resizeMode="contain"
-        />
+        style={{ width: 300, height: 300 }}
+        source={{ uri: "file://" + this.state.fileName }}
+        resizeMode="contain"
+      />
     }
     return (
       <View style={styles.container}>
         <Text style={styles.capture} onPress={this.onConvert.bind(this)}>[Convert Sample MP4]</Text>
-        <Text style={styles.capture} onPress={this.onShow.bind(this)}>[Show Image]</Text>
         {ImageComponent}
       </View>
     );

@@ -506,5 +506,5 @@ end:
     if (ret < 0)
         av_log(NULL, AV_LOG_ERROR, "Error occurred: %s\n", av_err2str(ret));
 
-    ret ? dn(vp) : er(vp, av_err2str(ret));
+    ret ? er(vp, av_err2str(ret)) : dn(vp);
 }
