@@ -3,6 +3,7 @@ package com.ffmpeg_test_app;
 import android.app.Application;
 
 import com.facebook.react.ReactApplication;
+import com.reactlibrary.RNFFMpegPackage;
 import com.rnfs.RNFSPackage;
 import com.reactlibrary.RNFFMpegPackage;
 import com.facebook.react.ReactNativeHost;
@@ -25,6 +26,7 @@ public class MainApplication extends Application implements ReactApplication {
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
           new MainReactPackage(),
+            new RNFFMpegPackage(),
             new RNFSPackage(),
             new RNFFMpegPackage()
       );

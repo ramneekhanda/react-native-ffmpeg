@@ -12,14 +12,16 @@ import {
   View,
   TouchableHighlight,
   Icon,
-  Image
+  Image,
+  Button
 } from 'react-native';
 
-import ReactNativeFFMpeg from 'rn-ffmpeg';
+import ReactNativeFFMpeg from 'react-native-ffmpeg';
 import resolveAssetSource from 'react-native/Libraries/Image/resolveAssetSource';
 import RNFS from 'react-native-fs';
 
 export default class ffmpeg_test_app extends Component {
+  
   constructor(props) {
     super(props);
     this.state = {
@@ -86,23 +88,24 @@ export default class ffmpeg_test_app extends Component {
     }
   }
 
-  onShow() {
-
-  }
-
   render() {
     var ImageComponent = <View />
     if (this.state.imageAvailable) {
       console.log("showing image " + this.state.fileName)
-      ImageComponent = <Image
-        style={{ width: 300, height: 300 }}
+
+      ImageComponent = <View style={styles.preview}><Image
+        style={{ width: 300, height: 300}}
         source={{ uri: "file://" + this.state.fileName }}
         resizeMode="contain"
-      />
+      /></View>
     }
     return (
       <View style={styles.container}>
-        <Text style={styles.capture} onPress={this.onConvert.bind(this)}>[Convert Sample MP4]</Text>
+      <Button
+        onPress={this.onConvert.bind(this)}
+        title="Convert Video to GIF"
+        color="#841584"
+      />
         {ImageComponent}
       </View>
     );
@@ -115,7 +118,7 @@ const styles = StyleSheet.create({
   },
   preview: {
     flex: 1,
-    justifyContent: 'flex-end',
+    justifyContent: 'flex-start',
     alignItems: 'center'
   },
   capture: {
