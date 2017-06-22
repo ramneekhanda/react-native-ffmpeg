@@ -17,7 +17,7 @@ typedef void (*progress)(void *, int);
 typedef void (*done)(void *);
 typedef void (*error)(void *, char *);
 
-int encodeVideoOnly(const char *infile, const char *outfile, void * vp, progress p, done d, error e);
+void encodeVideoOnly(const char *infile, const char *outfile, void * vp, progress p, done d, error e);
 
 #endif
 

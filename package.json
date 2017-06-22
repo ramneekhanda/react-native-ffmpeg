@@ -1,6 +1,6 @@
 
 {
-  "name": "rn-ffmpeg",
+  "name": "react-native-ffmpeg",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -13,6 +13,6 @@
   "author": "",
   "license": "",
   "peerDependencies": {
-    "react-native": "^0.41.2"
+    "react-native": "^0.45.1"
   }
 }

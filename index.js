@@ -2,7 +2,6 @@
 
 import { NativeModules } from 'react-native';
 var ReactNativeFFMpegModule = require('react-native').NativeModules.RNFFMpegModule;
-
 var NativeAppEventEmitter = require('react-native').NativeAppEventEmitter;        
 var DeviceEventEmitter = require('react-native').DeviceEventEmitter;        // Android
 
