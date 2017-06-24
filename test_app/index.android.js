@@ -13,9 +13,11 @@ import {
   TouchableHighlight,
   Icon,
   Image,
-  Button
+  Button,
+  FlatList
 } from 'react-native';
 
+import * as Progress from 'react-native-progress';
 import ReactNativeFFMpeg from 'react-native-ffmpeg';
 import resolveAssetSource from 'react-native/Libraries/Image/resolveAssetSource';
 import RNFS from 'react-native-fs';
@@ -26,7 +28,8 @@ export default class test_app extends Component {
     super(props);
     this.state = {
       fileName: "",
-      imageAvailable: false
+      imageAvailable: false,
+      progress: 0
     }
   }
 
@@ -48,14 +51,19 @@ export default class test_app extends Component {
 
     this.setState({
       fileName: randomFileName,
-      imageAvailable: false
+      imageAvailable: false,
+      progress: 0.001
     });
 
     console.log("resolved file " + resolvedFile);
     console.log("writing output file " + randomFileName);
     var remoteFileName = this.getRemoteFileName(resolvedFile);
     const progress = p => { 
-      console.log("javascript completed percent - " + p.progress); 
+      var prog = p.progress/100
+      this.setState({
+        progress: prog
+      });
+      console.log("javascript completed percent - " + prog);
     }
     if (resolvedFile.search(/http/i) >= 0) {
       var localInputFileName = RNFS.CachesDirectoryPath + "/" + remoteFileName;
@@ -74,7 +82,7 @@ export default class test_app extends Component {
             fromFile: localInputFileName,
             toFile: randomFileName,
             outCodecStr: "gif",
-            filterSpec: "fps=10,split[a][b],[a]palettegen=stats_mode=2[a],[b][a]paletteuse=new=1",
+            filterSpec: "split[a][b],[a]palettegen=stats_mode=2[a],[b][a]paletteuse=new=1",
             progress
           }
         ).promise.then(() => {
@@ -94,20 +102,30 @@ export default class test_app extends Component {
     var ImageComponent = <View />
     if (this.state.imageAvailable) {
       console.log("showing image " + this.state.fileName)
+        var ImageComponent = [];
+        var images = [];
+        for (i = 0; i < 2; i++) 
+          images.push({key: i.toString()});
 
-      ImageComponent = <View style={styles.preview}><Image
-        style={{ width: 300, height: 300}}
-        source={{ uri: "file://" + this.state.fileName }}
-        resizeMode="contain"
-      /></View>
+        ImageComponent = <FlatList
+          data={images}
+          renderItem={({item}) => <Image
+            style={{ width: 300, height: 300}}
+            source={{ uri: "file://" + this.state.fileName }}
+            resizeMode="contain"
+            />}
+        />
     }
     return (
       <View style={styles.container}>
-      <Button
-        onPress={this.onConvert.bind(this)}
-        title="Convert Video to GIF"
-        color="#841584"
-      />
+        <Button
+          onPress={this.onConvert.bind(this)}
+          title="Convert Video to GIF"
+          color="#841584"
+        />
+        <Text>{this.state.progress}</Text>
+        <Progress.Bar progress={this.state.progress} width={300} />
+
         {ImageComponent}
       </View>
     );
@@ -119,9 +137,7 @@ const styles = StyleSheet.create({
     flex: 1
   },
   preview: {
-    flex: 1,
-    justifyContent: 'flex-start',
-    alignItems: 'center'
+    flex: 1
   },
   capture: {
     flex: 0,
