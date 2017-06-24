@@ -23,5 +23,5 @@ public class FFMpeg {
         ffmpegCallback.error("Error Occurred");
     }
 
-    public native void encodeVideoOnly(String filename, String outputFile);
+    public native void encodeVideoOnly(String filename, String outputFile, String outCodecStr, String filterSpec);
 }

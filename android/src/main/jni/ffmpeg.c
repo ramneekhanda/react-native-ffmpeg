@@ -26,10 +26,16 @@ void errorImpl(void *vp, char *err) {
 }
 
 JNIEXPORT void JNICALL
-Java_com_rnffmpeg_FFMpeg_encodeVideoOnly(JNIEnv *env, jobject obj, jstring filename_,
-                                     jstring outputFile_) {
+Java_com_rnffmpeg_FFMpeg_encodeVideoOnly(JNIEnv *env,
+                                         jobject obj,
+                                         jstring filename_,
+                                         jstring outputFile_,
+                                         jstring outCodecStr_,
+                                         jstring filterSpec_) {
     const char *filename = (*env)->GetStringUTFChars(env, filename_, 0);
     const char *outputFile = (*env)->GetStringUTFChars(env, outputFile_, 0);
+    const char *out_codec_str = (*env)->GetStringUTFChars(env, outCodecStr_, 0);
+    const char *filter_spec = (*env)->GetStringUTFChars(env, filterSpec_, 0);
     jclass cls = (*env)->GetObjectClass(env, obj);
     struct CallbackStruct cs = {
             env,
@@ -39,8 +45,10 @@ Java_com_rnffmpeg_FFMpeg_encodeVideoOnly(JNIEnv *env, jobject obj, jstring filen
             (*env)->GetMethodID(env, cls, "error", "()V")
     };
 
-    encodeVideoOnly(filename, outputFile, &cs, &progressImpl, &doneImpl, &errorImpl);
+    encodeVideoOnly(filename, outputFile, out_codec_str, filter_spec,  &cs, &progressImpl, &doneImpl, &errorImpl);
 
     (*env)->ReleaseStringUTFChars(env, filename_, filename);
     (*env)->ReleaseStringUTFChars(env, outputFile_, outputFile);
+    (*env)->ReleaseStringUTFChars(env, outCodecStr_, out_codec_str);
+    (*env)->ReleaseStringUTFChars(env, filterSpec_, filter_spec);
 }

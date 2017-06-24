@@ -2,6 +2,14 @@ cmake_minimum_required(VERSION 3.6.0)
 
 set(distribution_DIR ${CMAKE_SOURCE_DIR}/../../../distribution)
 
+find_library( # Defines the name of the path variable that stores the
+              # location of the NDK library.
+              log-lib
+
+              # Specifies the name of the NDK library that
+              # CMake needs to locate.
+              log )
+
 add_library(avcodec SHARED IMPORTED)
 add_library(avfilter SHARED IMPORTED)
 add_library(avformat SHARED IMPORTED)
@@ -25,11 +33,11 @@ set_target_properties(swscale PROPERTIES IMPORTED_LOCATION
 
 set(SOURCE_FILES encodeVideoOnly.c encodeVideoOnly.h ffmpeg.c)
 add_library(ffmpeg_wrap SHARED ${SOURCE_FILES})
-target_link_libraries(ffmpeg_wrap avcodec avfilter avformat avutil)
+target_link_libraries(ffmpeg_wrap avcodec avfilter avformat avutil ${log-lib})
 
 set(SOURCE_FILES_TESTS test/main.c encodeVideoOnly.c encodeVideoOnly.h)
 add_executable(ffmpeg_test ${SOURCE_FILES_TESTS})
-target_link_libraries(ffmpeg_test avcodec avfilter avformat avutil)
+target_link_libraries(ffmpeg_test avcodec avfilter avformat avutil ${log-lib})
 
 target_include_directories(ffmpeg_wrap PRIVATE
                            ${distribution_DIR}/ffmpeg/include/
@@ -38,3 +46,6 @@ target_include_directories(ffmpeg_wrap PRIVATE
 target_include_directories(ffmpeg_test PRIVATE
                            ${distribution_DIR}/ffmpeg/include/
                            )
+
+target_compile_options(ffmpeg_test PRIVATE "-w")
+target_compile_options(ffmpeg_wrap PRIVATE "-w")

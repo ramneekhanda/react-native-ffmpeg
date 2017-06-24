@@ -11,7 +11,7 @@
 #include <libavfilter/buffersrc.h>
 #include <libavutil/opt.h>
 #include <libavutil/pixdesc.h>
-
+#include <android/log.h>
 #include "encodeVideoOnly.h"
 
 typedef struct FilteringContext {
@@ -100,7 +100,7 @@ static int open_input_file(struct ConversionData *cData, const char *filename) {
     return 0;
 }
 
-static int open_output_file(struct ConversionData *cData, const char *filename) {
+static int open_output_file(struct ConversionData *cData, const char *filename, const char *out_codec_str) {
     AVStream *out_stream;
     AVCodecContext *dec_ctx, *enc_ctx;
     AVCodec *encoder;
@@ -120,7 +120,7 @@ static int open_output_file(struct ConversionData *cData, const char *filename) 
     }
     dec_ctx = cData->stream_ctx[0].dec_ctx;
 
-    encoder = avcodec_find_encoder(AV_CODEC_ID_GIF);
+    encoder = avcodec_find_encoder_by_name(out_codec_str);
     if (!encoder) {
         av_log(NULL, AV_LOG_FATAL, "Necessary encoder not found\n");
         return AVERROR_INVALIDDATA;
@@ -206,30 +206,30 @@ static int init_filter(FilteringContext* fctx, AVCodecContext *dec_ctx,
         goto end;
     }
 
-    snprintf(args, sizeof (args),
-            "video_size=%dx%d:pix_fmt=%d:time_base=%d/%d:pixel_aspect=%d/%d",
-            dec_ctx->width, dec_ctx->height, dec_ctx->pix_fmt,
-            dec_ctx->time_base.num, dec_ctx->time_base.den,
-            dec_ctx->sample_aspect_ratio.num,
-            dec_ctx->sample_aspect_ratio.den);
+    snprintf(args, sizeof(args),
+             "video_size=%dx%d:pix_fmt=%d:time_base=%d/%d:pixel_aspect=%d/%d",
+             dec_ctx->width, dec_ctx->height, dec_ctx->pix_fmt,
+             dec_ctx->time_base.num, dec_ctx->time_base.den,
+             dec_ctx->sample_aspect_ratio.num,
+             dec_ctx->sample_aspect_ratio.den);
 
     ret = avfilter_graph_create_filter(&buffersrc_ctx, buffersrc, "in",
-            args, NULL, filter_graph);
+                                       args, NULL, filter_graph);
     if (ret < 0) {
         av_log(NULL, AV_LOG_ERROR, "Cannot create buffer source\n");
         goto end;
     }
 
     ret = avfilter_graph_create_filter(&buffersink_ctx, buffersink, "out",
-            NULL, NULL, filter_graph);
+                                       NULL, NULL, filter_graph);
     if (ret < 0) {
         av_log(NULL, AV_LOG_ERROR, "Cannot create buffer sink\n");
         goto end;
     }
 
     ret = av_opt_set_bin(buffersink_ctx, "pix_fmts",
-            (uint8_t*) & enc_ctx->pix_fmt, sizeof (enc_ctx->pix_fmt),
-            AV_OPT_SEARCH_CHILDREN);
+                         (uint8_t *) &enc_ctx->pix_fmt, sizeof(enc_ctx->pix_fmt),
+                         AV_OPT_SEARCH_CHILDREN);
     if (ret < 0) {
         av_log(NULL, AV_LOG_ERROR, "Cannot set output pixel format\n");
         goto end;
@@ -252,11 +252,18 @@ static int init_filter(FilteringContext* fctx, AVCodecContext *dec_ctx,
     }
 
     if ((ret = avfilter_graph_parse_ptr(filter_graph, filter_spec,
-            &inputs, &outputs, NULL)) < 0)
+                                     &inputs, &outputs, NULL)) < 0) {
+        __android_log_print(ANDROID_LOG_INFO, "react-native-ffmpeg",
+                            "avfilter_graph_parse2 failed");
         goto end;
+    }
 
-    if ((ret = avfilter_graph_config(filter_graph, NULL)) < 0)
+    if ((ret = avfilter_graph_config(filter_graph, NULL)) < 0) {
+        __android_log_print(ANDROID_LOG_INFO, "react-native-ffmpeg", "avfilter_graph_config failed");
         goto end;
+    }
+
+    __android_log_print(ANDROID_LOG_INFO, "react-native-ffmpeg", "Number of filters setup are %u", filter_graph->nb_filters);
 
     /* Fill FilteringContext */
     fctx->buffersrc_ctx = buffersrc_ctx;
@@ -270,8 +277,7 @@ end:
     return ret;
 }
 
-static int init_filters(struct ConversionData *cData) {
-    const char *filter_spec;
+static int init_filters(struct ConversionData *cData, const char *filter_spec) {
     int ret;
     cData->filter_ctx = av_malloc_array(1, sizeof (*cData->filter_ctx));
     if (!cData->filter_ctx)
@@ -280,8 +286,13 @@ static int init_filters(struct ConversionData *cData) {
     cData->filter_ctx[0].buffersrc_ctx = NULL;
     cData->filter_ctx[0].buffersink_ctx = NULL;
     cData->filter_ctx[0].filter_graph = NULL;
-
-    filter_spec = "null"; /* passthrough (dummy) filter for video */
+    AVFilter *f = avfilter_get_by_name("paletteuse");
+    if (f) {
+        __android_log_print(ANDROID_LOG_INFO, "react-native-ffmpeg",  "Filter paletteuse found");
+    } else {
+        __android_log_print(ANDROID_LOG_INFO, "react-native-ffmpeg",  "Filter paletteuse NOT found");
+    }
+    //filter_spec = "split[a][b],[a]palettegen=stats_mode=2[a],[b][a]paletteuse=new=1";
 
     ret = init_filter(&cData->filter_ctx[0], cData->stream_ctx[0].dec_ctx,
                       cData->stream_ctx[0].enc_ctx, filter_spec);
@@ -292,14 +303,12 @@ static int encode_write_frame(struct ConversionData *cData, AVFrame *filt_frame,
     int ret;
     int got_frame_local;
     AVPacket enc_pkt;
-    av_log(NULL, AV_LOG_DEBUG, "Entering encode\n");
     int (*enc_func)(AVCodecContext *, AVPacket *, const AVFrame *, int *);
     enc_func = avcodec_encode_video2;
 
     if (!got_frame)
         got_frame = &got_frame_local;
 
-    av_log(NULL, AV_LOG_INFO, "Encoding frame\n");
     /* encode filtered frame */
     enc_pkt.data = NULL;
     enc_pkt.size = 0;
@@ -318,7 +327,6 @@ static int encode_write_frame(struct ConversionData *cData, AVFrame *filt_frame,
                          cData->stream_ctx[0].enc_ctx->time_base,
                          cData->ofmt_ctx->streams[0]->time_base);
 
-    av_log(NULL, AV_LOG_DEBUG, "Muxing frame\n");
     /* mux encoded frame */
     ret = av_interleaved_write_frame(cData->ofmt_ctx, &enc_pkt);
     return ret;
@@ -328,7 +336,6 @@ static int filter_encode_write_frame(struct ConversionData *cData, AVFrame *fram
     int ret;
     AVFrame *filt_frame;
 
-    av_log(NULL, AV_LOG_INFO, "Pushing decoded frame to filters\n");
     /* push the decoded frame into the filtergraph */
     ret = av_buffersrc_add_frame_flags(cData->filter_ctx[0].buffersrc_ctx,
             frame, 0);
@@ -344,7 +351,7 @@ static int filter_encode_write_frame(struct ConversionData *cData, AVFrame *fram
             ret = AVERROR(ENOMEM);
             break;
         }
-        av_log(NULL, AV_LOG_INFO, "Pulling filtered frame from filters\n");
+        av_log(NULL, AV_LOG_DEBUG, "Pulling filtered frame from filters\n");
         ret = av_buffersink_get_frame(cData->filter_ctx[0].buffersink_ctx,
                 filt_frame);
         if (ret < 0) {
@@ -376,7 +383,7 @@ static int flush_encoder(struct ConversionData *cData, unsigned int stream_index
         return 0;
 
     while (1) {
-        av_log(NULL, AV_LOG_INFO, "Flushing stream #%u encoder\n", stream_index);
+        av_log(NULL, AV_LOG_DEBUG, "Flushing stream #%u encoder\n", stream_index);
         ret = encode_write_frame(cData, NULL, &got_frame);
         if (ret < 0)
             break;
@@ -386,7 +393,39 @@ static int flush_encoder(struct ConversionData *cData, unsigned int stream_index
     return ret;
 }
 
-void encodeVideoOnly(const char *infile, const char *outfile, void *vp, progress prgs, done dn, error er) {
+void android_log(void *ptr, int level, const char* fmt, va_list vl) {
+    int and_level = ANDROID_LOG_DEBUG;
+    switch (level) {
+        case AV_LOG_INFO:
+            and_level = ANDROID_LOG_INFO;
+            break;
+        case AV_LOG_DEBUG:
+            and_level = ANDROID_LOG_DEBUG;
+            break;
+        case AV_LOG_ERROR:
+            and_level = ANDROID_LOG_ERROR;
+            break;
+        case AV_LOG_FATAL:
+            and_level = ANDROID_LOG_FATAL;
+            break;
+        case AV_LOG_TRACE:
+            and_level = ANDROID_LOG_VERBOSE;
+            break;
+        default:
+            and_level = ANDROID_LOG_DEBUG;
+            break;
+    }
+    __android_log_vprint(and_level, "react-native-ffmpeg", fmt, vl);
+}
+
+void encodeVideoOnly(const char *infile,
+                     const char *outfile,
+                     const char *out_codec_str,
+                     const char *filter_spec,
+                     void *vp,
+                     progress prgs,
+                     done dn,
+                     error er) {
     int ret;
     AVPacket packet = {.data = NULL, .size = 0};
     AVFrame *frame = NULL;
@@ -394,18 +433,20 @@ void encodeVideoOnly(const char *infile, const char *outfile, void *vp, progress
     int got_frame;
     int (*dec_func)(AVCodecContext *, AVFrame *, int *, const AVPacket *);
     struct ConversionData cData = { 0 };
+
     av_register_all();
     avfilter_register_all();
+    av_log_set_callback(android_log);
 
     if ((ret = open_input_file(&cData, infile)) < 0) {
         av_log(NULL, AV_LOG_ERROR, ">>>>>>>>> Error in opening input file\n");
         goto end;
     }
-    if ((ret = open_output_file(&cData, outfile)) < 0) {
+    if ((ret = open_output_file(&cData, outfile, out_codec_str)) < 0) {
         av_log(NULL, AV_LOG_ERROR, ">>>>>>>>> Error in opening output file\n");
         goto end;
     }
-    if ((ret = init_filters(&cData)) < 0)
+    if ((ret = init_filters(&cData, filter_spec)) < 0)
         goto end;
 
     /* read all packets */
@@ -445,8 +486,8 @@ void encodeVideoOnly(const char *infile, const char *outfile, void *vp, progress
                 av_frame_free(&frame);
                 if (ret < 0)
                     goto end;
-                int p = (int) (cData.nb_frames_written / cData.nb_frames * 100);
-                av_log(NULL, AV_LOG_ERROR, "nb_frames: %u, nb_frames_written: %u, percentage: %d\n", cData.nb_frames, cData.nb_frames_written, p);
+                int p = ((double_t)cData.nb_frames_written / cData.nb_frames) * 100;
+                av_log(NULL, AV_LOG_INFO, "nb_frames: %lld, nb_frames_written: %lld, percentage: %d\n", cData.nb_frames, cData.nb_frames_written, p);
                 prgs(vp, p);
             } else {
                 av_frame_free(&frame);
@@ -499,7 +540,7 @@ end:
     avformat_free_context(cData.ofmt_ctx);
 
     if (ret < 0)
-        av_log(NULL, AV_LOG_ERROR, "Error occurred: %s\n", av_err2str(ret));
+        __android_log_print(ANDROID_LOG_INFO, "react-native-ffmpeg",  "Error occurred: %s\n", av_err2str(ret));
 
     ret ? er(vp, av_err2str(ret)) : dn(vp);
 

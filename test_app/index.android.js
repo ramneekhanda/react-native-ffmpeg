@@ -73,6 +73,8 @@ export default class test_app extends Component {
           {
             fromFile: localInputFileName,
             toFile: randomFileName,
+            outCodecStr: "gif",
+            filterSpec: "fps=10,split[a][b],[a]palettegen=stats_mode=2[a],[b][a]paletteuse=new=1",
             progress
           }
         ).promise.then(() => {

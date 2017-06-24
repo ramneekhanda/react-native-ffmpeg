@@ -36,6 +36,8 @@ var ReactNativeFFMpeg = {
       subscriptions.push(NativeAppEventEmitter.addListener('RNFFMPEG-PROGRESS-' + jobId, options.progress));
     }
 
+    options["jobId"] = jobId;
+
     var bridgeOptions = {
       jobId: jobId,
       fromFile: options.fromFile,
@@ -44,7 +46,7 @@ var ReactNativeFFMpeg = {
 
     return {
       jobId,
-      promise: ReactNativeFFMpegModule.encodeVideoOnly(bridgeOptions).then(res => {
+      promise: ReactNativeFFMpegModule.encodeVideoOnly(options).then(res => {
         subscriptions.forEach(sub => sub.remove());
         return res;
       })

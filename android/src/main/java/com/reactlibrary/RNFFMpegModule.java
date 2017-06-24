@@ -34,8 +34,11 @@ public class RNFFMpegModule extends ReactContextBaseJavaModule {
     int jobId = options.getInt("jobId");
     String fromFile = options.getString("fromFile");
     String toFile = options.getString("toFile");
+    String outCodecStr = options.getString("outCodecStr");
+    String filterSpec = options.getString("filterSpec");
+
     FFMpeg ffmpeg = new FFMpeg(new FFMpegCallback(jobId, promise, reactContext));
-    ffmpeg.encodeVideoOnly(fromFile, toFile);
+    ffmpeg.encodeVideoOnly(fromFile, toFile, outCodecStr, filterSpec);
   }
 }
 
